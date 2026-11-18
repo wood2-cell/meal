@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><base target="_blank">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f3864">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="급식 운영">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<title>급식 운영</title>
+<style>
+:root{--navy:#1f3864;--navy2:#2f5597;--slate:#44546a;--bg:#eef1f5;--card:#fff;--line:#d8dee8;--ink:#1d2433;--sub:#5d6b80;--red:#c00000;--green:#3d7a2a;--amber:#b7791f}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:15px;line-height:1.45}
+.wrap{max-width:860px;margin:0 auto;padding:0 14px 40px}
+header{background:var(--navy);color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 14px}
+header .in{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1}header small{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
+.ib{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer}
+h2{font-size:15px;margin:22px 0 8px;color:var(--slate);display:flex;align-items:center;gap:6px}
+h2 .n{background:var(--slate);color:#fff;border-radius:10px;padding:0 8px;font-size:12px}
+.btns{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.btn{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;min-height:54px}
+.btn i{font-style:normal;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:15px;flex:none}
+.btn.cook{border-color:#c6d3ea;background:#f5f8fd}
+.menu{display:block;margin-top:8px;text-align:center;background:var(--navy2);color:#fff;border-radius:12px;padding:12px;text-decoration:none;font-weight:600}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.k{background:var(--card);border-radius:12px;padding:10px 8px;text-align:center;border-top:4px solid var(--slate)}
+.k b{display:block;font-size:26px;line-height:1.1}.k span{font-size:12px;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.card.over{border-left:5px solid var(--red)}.card.urg{border-left:5px solid var(--amber)}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
+.no{font-weight:700;color:var(--ink)}
+.pill{border-radius:20px;padding:1px 9px;font-size:12px;font-weight:600;background:#e6eaf1;color:var(--slate)}
+.pill.claim{background:#fde8e8;color:var(--red)}.pill.st{margin-left:auto}
+.st-접수{background:#dde3ee;color:var(--navy)}.st-확인중,.st-조치중{background:#fff2cc;color:#7a5a00}.st-조치완료,.st-요양원확인완료{background:#e2f0d9;color:var(--green)}.st-보류{background:#eee;color:#666}
+.txt{margin:6px 0 2px;white-space:pre-wrap;word-break:break-all}
+.act{margin-top:6px;padding:8px;background:#f4f6f9;border-radius:8px;font-size:13px;white-space:pre-wrap;color:#334}
+.meta{font-size:12px;color:var(--sub);margin-top:4px}
+.go{display:inline-block;margin-top:8px;background:var(--navy2);color:#fff;border-radius:8px;padding:7px 12px;font-size:13px;text-decoration:none;font-weight:600}
+.row{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #edf0f4;font-size:14px}.row:last-child{border:0}
+.row .d{flex:none;width:44px;color:var(--sub);font-size:13px}.row .m{flex:1;min-width:0}
+.row .s{flex:none;font-size:12px;color:var(--sub)}
+.red{color:var(--red);font-weight:700}.ok{color:var(--green)}
+.empty{color:var(--sub);font-size:13px;padding:6px 0}
+details summary{cursor:pointer;color:var(--slate);font-weight:600;margin:16px 0 8px}
+.note{margin-top:26px;font-size:12px;color:var(--sub);text-align:center}
+.lock{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9}
+.lock .box{background:#fff;border-radius:16px;padding:26px 22px;width:min(320px,90vw);text-align:center}
+.lock input{font-size:28px;letter-spacing:12px;text-align:center;width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;margin:14px 0 10px}
+.lock button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--navy2);color:#fff;font-size:16px;font-weight:600}
+.err{color:var(--red);font-size:13px;min-height:18px}
+.loading{text-align:center;color:var(--sub);padding:40px 0}
+.grid2>div{min-width:0}.row .m b{word-break:keep-all}
+@media (min-width:640px){.btns{grid-template-columns:repeat(4,1fr)}.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}}
+@media (max-width:380px){.kpi{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<div class="lock" id="lock" style="display:none"><div class="box">
+<div style="font-weight:700;font-size:17px;color:#1f3864">급식 운영</div>
+<div style="font-size:13px;color:#5d6b80;margin-top:4px">비밀번호 4자리를 입력하세요</div>
+<input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+<div class="err" id="err"></div><button id="enter">열기</button></div></div>
+<header><div class="in"><h1><span id="ttl">급식 운영</span><small id="sub">불러오는 중…</small></h1>
+<button class="ib" onclick="load()">새로 고침</button></div></header>
+<div class="wrap" id="app"><div class="loading">불러오는 중…</div></div>
+<script>
+var ROLE='nh',PIN='',D=null,API='https://script.google.com/macros/s/AKfycbzOT0o3i03r2SCyWjT9CPgugJan6ko80tDRBm5G6HWaxmPPWX2YWUagS8NEkgUymvA7/exec';
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function getPin(){try{return localStorage.getItem('hh_pin')||'';}catch(e){return '';}}
+function setPin(v){try{if(v)localStorage.setItem('hh_pin',v);else localStorage.removeItem('hh_pin');}catch(e){}}
+function showLock(msg){document.getElementById('lock').style.display='flex';document.getElementById('err').textContent=msg||'';var p=document.getElementById('pin');p.value='';setTimeout(function(){p.focus();},50);}
+document.getElementById('enter').onclick=function(){PIN=document.getElementById('pin').value.trim();load();};
+document.getElementById('pin').addEventListener('input',function(){var v=this.value.replace(/[^0-9]/g,'');if(v!==this.value)this.value=v;if(v.length===4){PIN=v;load();}});document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter'){PIN=this.value.trim();load();}});
+function load(){
+  if(!PIN){showLock();return;}
+  document.getElementById('sub').textContent='불러오는 중…';
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({pin:PIN,role:ROLE})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d||!d.ok){
+      if(d&&d.locked){showLock('비밀번호를 여러 번 틀려 잠시 잠겼습니다. 1시간 뒤에 다시 해 주세요');return;}
+      setPin('');PIN='';showLock('비밀번호가 맞지 않습니다');return;}
+    setPin(PIN);document.getElementById('lock').style.display='none';D=d;
+    if(d.title){document.getElementById('ttl').textContent=d.title;document.title=d.title;}
+    render(d);
+  })
+  .catch(function(){document.getElementById('sub').textContent='불러오지 못했습니다 — 새로 고침을 눌러 주세요';});
+}
+function pillSt(s){return '<span class="pill st st-'+esc(s).replace(/\s/g,'')+'">'+esc(s)+'</span>';}
+function reqCard(x,d,closed){
+  var cls='card'+(!closed&&x.over?' over':(!closed&&x.urgent==='긴급'?' urg':''));
+  var h='<div class="'+cls+'"><div class="top"><span class="no">#'+esc(x.no)+'</span>'
+   +'<span class="pill'+(x.kind==='클레임'?' claim':'')+'">'+esc(x.kind)+'</span><span>'+esc(x.cat)+'</span>'
+   +(x.urgent==='긴급'?'<span class="red">긴급</span>':'')+pillSt(x.status)+'</div>';
+  var sub=[x.date,x.meal,x.menu].filter(function(v){return v&&v!=='해당 없음';}).join(' · ');
+  if(sub)h+='<div class="meta" style="color:#1d2433;font-weight:600">'+esc(sub)+'</div>';
+  h+='<div class="txt">'+esc(x.text)+'</div>';
+  if(x.action)h+='<div class="act">'+esc(x.action)+'</div>';
+  h+='<div class="meta">접수 '+esc(x.at)+(x.who?' · '+esc(x.who):'')+(closed?(x.done?' · 완료 '+esc(x.done):''):(' · '+(x.days===''?'':esc(x.days)+'일째')))+(x.owner?' · 담당 '+esc(x.owner):'')+(x.over&&!closed?' · <span class="red">기한 초과</span>':'')+'</div>';
+  if(!closed&&d.links.actNo)h+='<a class="go" href="'+esc(d.links.actNo.replace(d.ph,String(x.no)))+'">조치 기록하기</a>';
+  return h+'</div>';
+}
+function btn(href,icon,color,label,extra){return '<a class="btn'+(extra||'')+'" href="'+esc(href)+'"><i style="background:'+color+'">'+icon+'</i>'+label+'</a>';}
+function section(title,count,body){return '<h2>'+title+(count!=null?' <span class="n">'+count+'</span>':'')+'</h2>'+body;}
+function render(d){
+  document.getElementById('sub').textContent=d.now+' 기준'+(d.role==='cook'?' · 총괄 조리사':'');
+  var L=d.links,h='<div class="btns">'
+   +btn(L.meal,'±','#2f5597','식수 변동')+btn(L.diet,'식','#3d7a2a','특별 식이 변경')
+   +btn(L.notice,'공','#44546a','공지·전달')+btn(L.req,'!','#c00000','요청·클레임');
+  if(L.act)h+=btn(L.act,'✓','#1f3864','조치 기록',' cook')+btn(L.hyg,'위','#7a5a00','위생·검수 기록',' cook');
+  h+='</div>';
+  if(d.menuUrl)h+='<a class="menu" href="'+esc(d.menuUrl)+'">이번 달 식단표 보기</a>';
+  var k=d.kpi;
+  h+='<div class="kpi"><div class="k" style="border-color:#2f5597"><b>'+k.open+'</b><span>진행 중</span></div>'
+   +'<div class="k" style="border-color:#c00000"><b class="'+(k.over?'red':'')+'">'+k.over+'</b><span>기한 초과</span></div>'
+   +'<div class="k"><b>'+k.month+'</b><span>이번 달 접수</span></div>'
+   +'<div class="k" style="border-color:#3d7a2a"><b>'+k.monthDone+'</b><span>이번 달 완료</span></div></div>';
+  h+=section('진행 중인 요청·클레임',d.open.length,d.open.length?d.open.map(function(x){return reqCard(x,d,false);}).join(''):'<div class="card empty">진행 중인 요청이 없습니다</div>');
+  if(d.closed.length)h+='<details><summary>최근 처리 완료 '+d.closed.length+'건</summary>'+d.closed.map(function(x){return reqCard(x,d,true);}).join('')+'</details>';
+  var g='<div class="grid2"><div>';
+  g+=section('공지·전달',null,'<div class="card">'+(d.notices.length?d.notices.map(function(n){return '<div class="row"><div class="d">'+esc(n.at)+'</div><div class="m"><b>'+esc(n.title)+'</b>'+(n.period?' <span class="meta">('+esc(n.period)+')</span>':'')+'<div class="txt" style="font-size:13px">'+esc(n.body)+'</div></div><div class="s">'+(n.chk?'<span class="ok">'+esc(n.chk)+'</span>':'확인 전')+'</div></div>';}).join(''):'<div class="empty">없음</div>')+'</div>');
+  g+=section('식수 변동 (최근 14일)',null,'<div class="card">'+(d.meals.length?d.meals.map(function(m){return '<div class="row"><div class="d">'+esc(m.date)+'</div><div class="m"><b>'+esc(m.kind)+' '+esc(m.change)+'</b> '+esc(m.room)+(m.meal?' · '+esc(m.meal)+'부터':'')+(m.memo?'<div class="meta">'+esc(m.memo)+'</div>':'')+'</div><div class="s">'+(m.done?'<span class="ok">반영</span>':'반영 전')+'</div></div>';}).join(''):'<div class="empty">없음</div>')+'</div>');
+  g+='</div><div>';
+  g+=section('특별 식이 변경',null,'<div class="card">'+(d.diets.length?d.diets.map(function(m){return '<div class="row"><div class="d">'+esc(m.start||'')+'</div><div class="m"><b>'+esc(m.room)+'</b> '+esc(m.kind)+' · '+esc(m.types)+(m.allergy?'<div class="red" style="font-size:13px">금지: '+esc(m.allergy)+'</div>':'')+(m.memo?'<div class="meta">'+esc(m.memo)+'</div>':'')+'</div><div class="s">'+(m.done?'<span class="ok">반영</span>':'반영 전')+'</div></div>';}).join(''):'<div class="empty">없음</div>')+'</div>');
+  g+=section('위생·검수 (최근)',null,'<div class="card">'+(d.hyg.length?d.hyg.map(function(m){var bad=m.result!=='적합';return '<div class="row"><div class="d">'+esc(m.date)+'</div><div class="m"><b>'+esc(m.kind)+'</b> '+esc(m.item)+(m.action?'<div class="meta">'+esc(m.action)+'</div>':'')+'</div><div class="s '+(bad?'red':'ok')+'">'+esc(m.result)+'</div></div>';}).join(''):'<div class="empty">없음</div>')+'</div>');
+  g+='</div></div>';
+  h+=g+'<div class="note">제출한 내용을 고치거나 취소하려면 급식 담당자에게 알려 주세요.<br><a href="#" target="_self" onclick="setPin(\'\');location.reload();return false;" style="color:#5d6b80">이 기기에서 잠그기</a></div>';
+  document.getElementById('app').innerHTML=h;
+}
+PIN=getPin();load();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
+setInterval(function(){if(PIN&&document.visibilityState==='visible')load();},300000);
+</script></body></html>

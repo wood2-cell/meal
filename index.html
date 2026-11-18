@@ -27,6 +27,7 @@ h3{font-size:13px;color:var(--sub);margin:12px 0 6px}
 .btn{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;min-height:54px}
 .btn i{font-style:normal;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:15px;flex:none}
 .btn.cook{border-color:#c6d3ea;background:#f5f8fd}
+button.btn{width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:600}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
 .k{background:var(--card);border-radius:12px;padding:10px 6px;text-align:center;border:0;border-top:4px solid var(--slate);cursor:pointer;color:var(--ink)}
 .k.on{outline:2px solid var(--navy2)}.k.static{cursor:default}
@@ -74,6 +75,21 @@ details summary{cursor:pointer;color:var(--slate);font-weight:600;margin:12px 0 
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px}
 .chip.on{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:#f4f6f9}
+.thumbs.big img{width:96px;height:96px}
+.lb{position:fixed;inset:0;background:rgba(10,14,24,.9);display:none;align-items:center;justify-content:center;z-index:50;flex-direction:column;gap:10px;padding:16px}
+.lb.show{display:flex}
+.lb img{max-width:94vw;max-height:80vh;border-radius:8px;background:#222;object-fit:contain}
+.lb .cap{color:#dde3ee;font-size:13px}
+.lb button{background:#fff;border:0;border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer}
+.pick{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pick .pk{position:relative}
+.pick .pk img{width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.pick .pk b{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:13px;cursor:pointer}
+.addph{width:76px;height:76px;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:center;color:var(--sub);font-size:12px;cursor:pointer;text-align:center;line-height:1.3}
+.seg{display:flex;gap:6px}.seg button{flex:1;padding:9px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--navy2);color:#fff;border-color:var(--navy2)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d2433;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:40;display:none;max-width:90vw}
 @media (min-width:700px){.btns{grid-template-columns:repeat(4,1fr)}}
 @media (max-width:380px){.kpi{grid-template-columns:repeat(2,1fr)}}
@@ -88,6 +104,7 @@ details summary{cursor:pointer;color:var(--slate);font-weight:600;margin:12px 0 
 <div class="wrap" id="app"><div class="loading">불러오는 중…</div></div>
 <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
 <div class="toast" id="toast"></div>
+<div class="lb" id="lb"><img id="lbImg" alt="사진"><div class="cap" id="lbCap"></div><button id="lbClose">닫기</button></div>
 <script>
 var ROLE='nh',API='https://script.google.com/macros/s/AKfycbzOT0o3i03r2SCyWjT9CPgugJan6ko80tDRBm5G6HWaxmPPWX2YWUagS8NEkgUymvA7/exec',PKEY=ROLE==='admin'?'hh_admin_pin':'hh_pin';
 var PIN='',D=null,FILTER=null,ACTOR='',CUR=null,BUSY=false;
@@ -153,9 +170,14 @@ function card(x,closed){
   if(s.body)h+='<div class="txt">'+esc(s.body)+'</div>';
   if(s.red)h+='<div class="red" style="font-size:13px">'+esc(s.red)+'</div>';
   if(s.note)h+='<div class="act">'+esc(s.note)+'</div>';
+  h+=thumbs(x,false);
   h+='<div class="meta">접수 '+esc(x.at)+(F(x,'작성자')?' · '+esc(F(x,'작성자')):'')+(!closed&&x.days!==''?' · '+esc(x.days)+'일째':'')+(!closed&&x.over?' · <span class="red">기한 초과</span>':'')+'</div>';
   h+=inlineActions(x);
   return h+'</div>';
+}
+function thumbs(x,big){
+  if(!x.photos||!x.photos.length)return '';
+  return '<div class="thumbs'+(big?' big':'')+'">'+x.photos.map(function(p,i){return '<img src="'+esc(p.t)+'" data-photo="'+esc(p.id)+'" data-cap="'+esc(D.labels[x.tab]+' #'+x.no+' · 사진 '+(i+1)+'/'+x.photos.length)+'" alt="사진 '+(i+1)+'">';}).join('')+'</div>';
 }
 function inlineActions(x){
   var h='';
@@ -181,7 +203,9 @@ function render(d){
       '<a class="tbtn" href="'+esc(d.sheetUrl)+'" target="_blank">구글 시트 열기</a><button class="tbtn" id="trashBtn">삭제함 ('+d.trash.length+')</button></div>';
   } else {
     h+='<div class="btns">';
-    d.tabs.forEach(function(k){var href=d.links[k];if(href)h+=btn(href,k,k==='buy'?' cook':'');});
+    d.tabs.forEach(function(k){
+      if(k==='buy'){var c=ICON.buy;h+='<button type="button" class="btn cook" id="newBuy"><i style="background:'+c[1]+'">'+c[0]+'</i>'+c[2]+'</button>';return;}
+      var href=d.links[k];if(href)h+=btn(href,k,'');});
     h+='</div>';
   }
   var k=d.kpi;
@@ -216,6 +240,7 @@ function render(d){
   $('app').innerHTML=h;
   if($('actor'))$('actor').onchange=function(){ACTOR=this.value;ls('hh_actor',ACTOR);$('sub').textContent=d.now+' 기준 · 처리자 '+(ACTOR||'선택 안 함');};
   if($('trashBtn'))$('trashBtn').onclick=openTrash;
+  if($('newBuy'))$('newBuy').onclick=openBuyForm;
   if($('clearF'))$('clearF').onclick=function(){FILTER=null;render(D);};
   $('lockBtn').onclick=function(e){e.preventDefault();ls(PKEY,'');location.reload();};
 }
@@ -226,6 +251,7 @@ function findItem(tab,no){
 }
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-f]');if(el){FILTER=FILTER===el.getAttribute('data-f')?null:el.getAttribute('data-f');render(D);return;}
+  el=e.target.closest('[data-photo]');if(el){e.stopPropagation();showPhoto(el);return;}
   el=e.target.closest('[data-confirm]');if(el){e.stopPropagation();var p=el.getAttribute('data-confirm').split(':');confirmItem(p[0],p[1],true);return;}
   if(e.target.closest('a'))return;
   el=e.target.closest('[data-open]');if(el){var q=el.getAttribute('data-open').split(':');openItem(q[0],q[1]);return;}
@@ -252,6 +278,7 @@ function openItem(tab,no){
   var x=findItem(tab,no);if(!x)return;CUR=x;
   var schema=ROLE==='admin'?D.schema[tab]:null;
   var h='<div class="ph"><b>'+esc(D.labels[tab])+' #'+esc(no)+'</b>'+pill(x.status)+'<button class="x" id="closeS">닫기</button></div>';
+  h+=thumbs(x,true);
   if(schema){
     h+='<div class="chips">'+schema.statuses.map(function(s){return '<button class="chip'+(s===x.status?' on':'')+'" data-st="'+esc(s)+'">'+esc(s)+'</button>';}).join('')+'</div>';
     h+='<div class="meta" style="margin-bottom:6px">위 버튼을 누르면 바로 상태가 저장됩니다. 아래 칸을 고친 뒤에는 [저장]을 눌러 주세요.</div>';
@@ -286,6 +313,70 @@ function openTrash(){
   [].forEach.call(document.querySelectorAll('[data-restore]'),function(b){b.onclick=function(){api({action:'restore',id:b.getAttribute('data-restore')},openTrash);};});
   [].forEach.call(document.querySelectorAll('[data-purge]'),function(b){b.onclick=function(){if(window.confirm('완전히 삭제하면 되살릴 수 없습니다. 삭제할까요?'))api({action:'purge',id:b.getAttribute('data-purge')},openTrash);};});
 }
+// ---------- 사진 크게 보기 ----------
+var PHOTO_CACHE={};
+function post(body){body.pin=PIN;body.role=ROLE;body.actor=ACTOR;return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
+function showPhoto(el){
+  var id=el.getAttribute('data-photo'),img=$('lbImg');
+  img.src=PHOTO_CACHE[id]||el.getAttribute('src');$('lbCap').textContent=(el.getAttribute('data-cap')||'')+(PHOTO_CACHE[id]?'':' · 크게 불러오는 중…');
+  $('lb').classList.add('show');$('lb').setAttribute('data-id',id);
+  if(PHOTO_CACHE[id])return;
+  post({action:'photo',id:id}).then(function(d){
+    if(!d||!d.ok){$('lbCap').textContent=(d&&d.error)||'사진을 불러오지 못했습니다';return;}
+    PHOTO_CACHE[id]=d.img;if($('lb').getAttribute('data-id')===id){img.src=d.img;$('lbCap').textContent=el.getAttribute('data-cap')||'';}
+  }).catch(function(){$('lbCap').textContent='사진을 불러오지 못했습니다';});
+}
+$('lbClose').onclick=function(){$('lb').classList.remove('show');};
+$('lb').addEventListener('click',function(e){if(e.target===$('lb'))$('lb').classList.remove('show');});
+
+// ---------- 조리실 요청·구매 올리기 (사진 최대 3장) ----------
+var PICK=[];
+function shrink(file,max,q){return new Promise(function(res,rej){
+  var u=URL.createObjectURL(file),im=new Image();
+  im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,max/Math.max(w,h));var c=document.createElement('canvas');
+    c.width=Math.round(w*s);c.height=Math.round(h*s);var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',q));};
+  im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('사진을 읽지 못했습니다'));};
+  im.src=u;});}
+function drawPick(){
+  var h=PICK.map(function(p,i){return '<div class="pk"><img src="'+p.thumb+'" alt=""><b data-rm="'+i+'">×</b></div>';}).join('');
+  if(PICK.length<3)h+='<label class="addph" for="phIn">+ 사진<br>('+PICK.length+'/3)</label>';
+  $('pick').innerHTML=h;
+  [].forEach.call($('pick').querySelectorAll('[data-rm]'),function(b){b.onclick=function(){PICK.splice(+b.getAttribute('data-rm'),1);drawPick();};});
+}
+function openBuyForm(){
+  PICK=[];var cats=D.buyCats||['기타'],urg='보통';
+  var h='<div class="ph"><b>조리실 요청·구매</b><button class="x" id="closeS">닫기</button></div>'+
+    '<div class="fld"><label>작성자 (이름·직책)</label><input id="bWho" value="'+esc(ls('hh_who'))+'"></div>'+
+    '<div class="fld"><label>요청 구분</label><select id="bCat">'+cats.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div>'+
+    '<div class="fld"><label>품목·내용 (필수)</label><textarea id="bWhat" placeholder="예: 식용유 18L, 냉동고 문 고무패킹 교체"></textarea></div>'+
+    '<div class="fld"><label>수량</label><input id="bQty" placeholder="예: 2통"></div>'+
+    '<div class="fld"><label>필요한 날짜</label><input id="bNeed" type="date"></div>'+
+    '<div class="fld"><label>긴급도</label><div class="seg" id="bUrg"><button type="button" data-u="긴급">긴급</button><button type="button" data-u="보통" class="on">보통</button><button type="button" data-u="낮음">낮음</button></div></div>'+
+    '<div class="fld"><label>사진 (선택, 최대 3장 — 누르면 카메라나 앨범을 고를 수 있어요)</label><div class="pick" id="pick"></div>'+
+    '<input id="phIn" type="file" accept="image/*" multiple style="display:none"></div>'+
+    '<div style="margin-top:14px"><button class="cta" id="bSend">요청 올리기</button></div>';
+  $('panel').innerHTML=h;$('sheet').classList.add('show');$('closeS').onclick=closeSheet;
+  drawPick();
+  [].forEach.call(document.querySelectorAll('#bUrg button'),function(b){b.onclick=function(){urg=b.getAttribute('data-u');[].forEach.call(document.querySelectorAll('#bUrg button'),function(o){o.classList.toggle('on',o===b);});};});
+  $('phIn').onchange=function(){
+    var files=[].slice.call(this.files).slice(0,3-PICK.length);this.value='';
+    if(!files.length)return;toast('사진을 줄이는 중…');
+    Promise.all(files.map(function(f){return Promise.all([shrink(f,240,0.7),shrink(f,1280,0.8)]).then(function(r){return {thumb:r[0],full:r[1]};});}))
+    .then(function(list){PICK=PICK.concat(list).slice(0,3);drawPick();toast('사진 '+PICK.length+'장 준비됨');})
+    .catch(function(e){toast(e.message||'사진을 읽지 못했습니다');});
+  };
+  $('bSend').onclick=function(){
+    var what=$('bWhat').value.trim();if(!what){toast('품목·내용을 적어 주세요');$('bWhat').focus();return;}
+    ls('hh_who',$('bWho').value.trim());
+    this.disabled=true;this.textContent=PICK.length?'사진과 함께 올리는 중…':'올리는 중…';
+    var btnEl=this;
+    api({action:'submitBuy',item:{who:$('bWho').value.trim(),cat:$('bCat').value,what:what,qty:$('bQty').value.trim(),need:$('bNeed').value,urg:urg},photos:PICK},
+      function(){PICK=[];closeSheet();});
+    setTimeout(function(){if(btnEl.isConnected&&$('sheet').classList.contains('show')){btnEl.disabled=false;btnEl.textContent='요청 올리기';}},45000);
+  };
+}
+
 ACTOR=ls('hh_actor');PIN=ls(PKEY);load();
 setInterval(function(){if(PIN&&document.visibilityState==='visible'&&!$('sheet').classList.contains('show'))load();},300000);
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}

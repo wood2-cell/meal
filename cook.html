@@ -22,6 +22,7 @@ header h1{font-size:18px;margin:0;flex:1}header small{display:block;font-weight:
 .tbtn{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--ink);text-decoration:none;font-size:14px;cursor:pointer}
 h2{font-size:15px;margin:24px 0 8px;color:var(--slate);display:flex;align-items:center;gap:6px}
 h2 .n{background:var(--slate);color:#fff;border-radius:10px;padding:0 8px;font-size:12px}
+.addb{margin-left:auto;background:var(--navy2);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
 h3{font-size:13px;color:var(--sub);margin:12px 0 6px}
 .btns{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
 .btn{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;min-height:54px}
@@ -193,6 +194,7 @@ function row(x){
     (s.note?'<div class="meta">↳ '+esc(s.note)+'</div>':'')+'</div><div class="s">'+pill(x.status)+'</div></div>';
 }
 function btn(href,k,extra){var c=ICON[k];return '<a class="btn'+(extra||'')+'" href="'+esc(href)+'" target="_blank"><i style="background:'+c[1]+'">'+c[0]+'</i>'+c[2]+'</a>';}
+function hd(t,lab,n){return '<h2>'+esc(lab)+' <span class="n">'+n+'</span>'+(ROLE==='admin'?'<button class="addb" data-new="'+t+'">+ 새로 쓰기</button>':'')+'</h2>';}
 function list(items,fn,emptyMsg){items=items.filter(match);return items.length?items.map(fn).join(''):'<div class="empty">'+(emptyMsg||'없음')+'</div>';}
 
 function render(d){
@@ -219,18 +221,18 @@ function render(d){
     var s=d.sections[t],lab=d.labels[t];
     var open=s.open.filter(match);
     if(t==='req'||t==='buy'){
-      h+='<h2>'+esc(lab)+' <span class="n">'+open.length+'</span></h2>'+list(s.open,function(x){return card(x,false);},'진행 중인 항목이 없습니다');
+      h+=hd(t,lab,open.length)+list(s.open,function(x){return card(x,false);},'진행 중인 항목이 없습니다');
       if(!FILTER&&s.closed.length)h+='<details><summary>처리 완료 '+s.closed.length+'건</summary>'+s.closed.map(function(x){return card(x,true);}).join('')+'</details>';
     } else if(t==='notice'){
-      h+='<h2>'+esc(lab)+' <span class="n">'+open.length+'</span></h2>'+list(s.open,row,'진행 중인 공지가 없습니다');
+      h+=hd(t,lab,open.length)+list(s.open,row,'진행 중인 공지가 없습니다');
       if(!FILTER&&s.closed.length)h+='<details><summary>지난 공지 '+s.closed.length+'건</summary>'+s.closed.map(row).join('')+'</details>';
     } else if(t==='diet'){
-      h+='<h2>'+esc(lab)+' <span class="n">'+open.length+'</span></h2>';
+      h+=hd(t,lab,open.length);
       if(open.length||FILTER)h+='<h3>새로 들어온 변경</h3>'+list(s.open,row,'해당 없음');
       if(!FILTER)h+='<h3>어르신별 현재 식이 ('+s.current.length+'명)</h3>'+(s.current.length?s.current.map(row).join(''):'<div class="empty">등록된 특별 식이가 없습니다</div>');
       if(!FILTER&&ROLE==='admin'&&s.closed.length)h+='<details><summary>지난 변경 기록 '+s.closed.length+'건</summary>'+s.closed.map(row).join('')+'</details>';
     } else if(t==='meal'){
-      h+='<h2>'+esc(lab)+' <span class="n">'+open.length+'</span></h2>'+list(s.open,row,'반영할 식수 변동이 없습니다');
+      h+=hd(t,lab,open.length)+list(s.open,row,'반영할 식수 변동이 없습니다');
       if(!FILTER&&s.recent.length)h+='<h3>최근 14일 반영 완료</h3>'+s.recent.map(row).join('');
       if(!FILTER&&ROLE==='admin'&&s.closed.length)h+='<details><summary>지난 기록 '+s.closed.length+'건</summary>'+s.closed.map(row).join('')+'</details>';
     }
@@ -252,6 +254,7 @@ function findItem(tab,no){
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-f]');if(el){FILTER=FILTER===el.getAttribute('data-f')?null:el.getAttribute('data-f');render(D);return;}
   el=e.target.closest('[data-photo]');if(el){e.stopPropagation();showPhoto(el);return;}
+  el=e.target.closest('[data-new]');if(el){e.stopPropagation();openNew(el.getAttribute('data-new'));return;}
   el=e.target.closest('[data-confirm]');if(el){e.stopPropagation();var p=el.getAttribute('data-confirm').split(':');confirmItem(p[0],p[1],true);return;}
   if(e.target.closest('a'))return;
   el=e.target.closest('[data-open]');if(el){var q=el.getAttribute('data-open').split(':');openItem(q[0],q[1]);return;}
@@ -263,16 +266,51 @@ function confirmItem(tab,no,ok){
   var why=window.prompt('어떤 점을 다시 조치해야 하나요? (선택)','');if(why===null)return;
   api({action:'confirm',tab:tab,no:no,ok:false,text:why},closeSheet);
 }
-function field(label,val,schema){
+function toDT(v){var m=/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?/.exec(v||'');return m?m[1]+'T'+(m[2]||'00:00'):'';}
+function nowDT(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+// 같은 탭에서 이미 쓴 값들을 고를 수 있게 (짧은 칸만)
+function suggest(tab,label){
+  var s=D.sections[tab],seen={},out=[];
+  if(tab==='buy'&&label==='구분')(D.buyCats||[]).forEach(function(a){seen[a]=1;out.push(a);});
+  if(tab==='req'&&label==='구분')['요청','클레임','제안','칭찬'].forEach(function(a){seen[a]=1;out.push(a);});
+  if((tab==='diet')&&label==='구분')['신규','변경','해제'].forEach(function(a){seen[a]=1;out.push(a);});
+  if((tab==='meal')&&label==='구분')['입소','퇴소','외박·외출','병원 입원','복귀','기타'].forEach(function(a){seen[a]=1;out.push(a);});
+  [s.open,s.closed,s.recent||[],s.current||[]].forEach(function(p){p.forEach(function(x){var v=x.f&&x.f[label];if(v&&v.length<=30&&!seen[v]){seen[v]=1;out.push(v);}});});
+  if(label==='작성자'||label===(D.schema[tab]||{}).by)D.actors.concat(['총괄 조리사']).forEach(function(a){if(!seen[a]){seen[a]=1;out.push(a);}});
+  return out.slice(0,40);
+}
+var DL=0;
+function field(label,val,schema,tab){
   var editable=schema&&schema.edit.indexOf(label)>=0,h='<div class="fld"><label>'+esc(label)+'</label>';
   if(!editable)return h+'<div class="v">'+(val?esc(val):'<span style="color:#aab">-</span>')+'</div></div>';
   var name=' data-h="'+esc(label)+'"';
+  if(label===schema.at)return h+'<input type="datetime-local"'+name+' value="'+esc(toDT(val))+'"></div>';
+  if(label===schema.doneAt&&DATE_FIELDS.indexOf(label)<0)return h+'<input type="date"'+name+' value="'+esc(String(val).slice(0,10))+'"></div>';
   if(label===schema.status)return h+'<select'+name+'>'+schema.statuses.map(function(s){return '<option'+(s===val||(!val&&s==='접수')?' selected':'')+'>'+esc(s)+'</option>';}).join('')+'</select></div>';
-  if(label==='긴급도')return h+'<select'+name+'>'+['긴급','보통','낮음'].map(function(s){return '<option'+(s===val?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>';
+  if(label==='긴급도')return h+'<select'+name+'>'+['긴급','보통','낮음'].map(function(s){return '<option'+(s===val||(!val&&s==='보통')?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>';
   if(DATE_FIELDS.indexOf(label)>=0)return h+'<input type="date"'+name+' value="'+esc(String(val).slice(0,10))+'"></div>';
   if(LONG_FIELDS.indexOf(label)>=0)return h+'<textarea'+name+'>'+esc(val)+'</textarea></div>';
-  if(label===schema.by)return h+'<input'+name+' list="actorList" value="'+esc(val)+'"><datalist id="actorList">'+D.actors.concat(['총괄 조리사']).map(function(a){return '<option value="'+esc(a)+'">';}).join('')+'</datalist></div>';
+  var sg=tab?suggest(tab,label):[];
+  if(sg.length){var id='dl'+(++DL);return h+'<input'+name+' list="'+id+'" value="'+esc(val)+'" autocomplete="off"><datalist id="'+id+'">'+sg.map(function(a){return '<option value="'+esc(a)+'">';}).join('')+'</datalist></div>';}
   return h+'<input'+name+' value="'+esc(val)+'"></div>';
+}
+// 관리자: 새로 쓰기
+function openNew(tab){
+  var schema=D.schema[tab];if(!schema)return;CUR=null;
+  var init={};init[schema.at]=nowDT();if(schema.heads.indexOf('작성자')>=0)init['작성자']=ACTOR||'';
+  var h='<div class="ph"><b>'+esc(D.labels[tab])+' 새로 쓰기</b><button class="x" id="closeS">닫기</button></div>'+
+    '<div class="meta" style="margin-bottom:6px">아는 칸만 적으면 됩니다. 빈 칸은 나중에 눌러서 고칠 수 있습니다.</div>';
+  schema.heads.forEach(function(k){if(k==='출처')return;h+=field(k,init[k]||'',schema,tab);});
+  h+='<div style="margin-top:14px"><button class="cta" id="newSave">저장</button><button class="cta ghost" id="newCancel">취소</button></div>';
+  $('panel').innerHTML=h;$('sheet').classList.add('show');
+  $('closeS').onclick=closeSheet;$('newCancel').onclick=closeSheet;
+  $('newSave').onclick=function(){
+    var v={},any=false;
+    [].forEach.call($('panel').querySelectorAll('[data-h]'),function(i){var k=i.getAttribute('data-h'),val=i.value.trim();if(!val)return;v[k]=val;
+      if(k!==schema.at&&k!==schema.status&&k!=='작성자')any=true;});
+    if(!any){toast('내용을 하나 이상 적어 주세요');return;}
+    api({action:'create',tab:tab,values:v},closeSheet);
+  };
 }
 function openItem(tab,no){
   var x=findItem(tab,no);if(!x)return;CUR=x;
@@ -283,7 +321,7 @@ function openItem(tab,no){
     h+='<div class="chips">'+schema.statuses.map(function(s){return '<button class="chip'+(s===x.status?' on':'')+'" data-st="'+esc(s)+'">'+esc(s)+'</button>';}).join('')+'</div>';
     h+='<div class="meta" style="margin-bottom:6px">위 버튼을 누르면 바로 상태가 저장됩니다. 아래 칸을 고친 뒤에는 [저장]을 눌러 주세요.</div>';
   }
-  Object.keys(x.f).forEach(function(k){if(schema||x.f[k])h+=field(k,x.f[k],schema);});
+  Object.keys(x.f).forEach(function(k){if(schema||x.f[k])h+=field(k,x.f[k],schema,schema?tab:null);});
   if(schema)h+='<div style="margin-top:14px"><button class="cta" id="saveB">저장</button><button class="cta warn" id="delB">삭제함으로 옮기기</button></div>';
   if(ROLE==='nh'&&tab==='req'&&x.status==='조치 완료')h+='<div style="margin-top:14px"><button class="cta" id="okB">확인했어요</button><button class="cta ghost" id="noB">다시 조치 요청</button></div>';
   if(ROLE==='cook'&&tab==='buy'&&x.status==='완료')h+='<div style="margin-top:14px"><button class="cta" id="okB">받았어요 (확인)</button><button class="cta ghost" id="noB">다시 요청</button></div>';
@@ -298,7 +336,8 @@ function openItem(tab,no){
       var ch={};ch[schema.status]=b.getAttribute('data-st');api({action:'update',tab:tab,no:no,changes:ch},function(){openItem(tab,no);});};});
     $('saveB').onclick=function(){
       var ch={};[].forEach.call($('panel').querySelectorAll('[data-h]'),function(i){var k=i.getAttribute('data-h'),old=x.f[k]||'',v=i.value;
-        if(DATE_FIELDS.indexOf(k)>=0)old=String(old).slice(0,10);if(k===schema.status&&!old)old='접수';if(v!==old)ch[k]=v;});
+        if(DATE_FIELDS.indexOf(k)>=0||k===schema.doneAt)old=String(old).slice(0,10);if(k===schema.at)old=toDT(old);
+        if(k===schema.status&&!old)old=schema.statuses[0];if(k==='긴급도'&&!old)old='보통';if(v!==old)ch[k]=v;});
       if(!Object.keys(ch).length){toast('바뀐 내용이 없습니다');return;}
       api({action:'update',tab:tab,no:no,changes:ch},function(){openItem(tab,no);});
     };

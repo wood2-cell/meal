@@ -49,7 +49,15 @@ button.btn{width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:60
 .red{color:var(--red);font-weight:700}.ok{color:var(--green)}
 .empty{color:var(--sub);font-size:13px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .row{display:flex;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:6px;font-size:14px;cursor:pointer;align-items:flex-start}
-.row .d{flex:none;width:44px;color:var(--sub);font-size:13px;padding-top:1px}.row .m{flex:1;min-width:0}
+.row .d{flex:none;width:46px;color:var(--sub);font-size:13px;padding-top:1px;line-height:1.3}.row .d small{display:block;font-size:12px;color:#8a96a8}
+.t-req{border-left:4px solid #b5485d}.t-notice{border-left:4px solid #5b6b8c}.t-diet{border-left:4px solid #3f8a5f}.t-meal{border-left:4px solid #2c7a99}.t-buy{border-left:4px solid #a86f2c}
+h2.sec{color:var(--tc);border-bottom:2px solid var(--tc);padding-bottom:6px;margin-top:28px}h2.sec .n{background:var(--tc)}
+h2.sec .ic{width:24px;height:24px;border-radius:7px;background:var(--tc);color:#fff;display:grid;place-items:center;font-size:13px;flex:none}
+.links{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.lk{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;min-height:46px;min-width:0}
+.lk i{font-style:normal;flex:none;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:12px;color:#fff}
+.lk span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lk.off{opacity:.5;cursor:default}
+@media (min-width:700px){.links{grid-template-columns:repeat(5,1fr)}}.row .m{flex:1;min-width:0}
 .row .s{flex:none}
 .cta{display:inline-block;margin-top:8px;margin-right:6px;background:var(--navy2);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:13px;text-decoration:none;font-weight:600;cursor:pointer}
 .cta.ghost{background:#fff;color:var(--navy2);border:1px solid var(--navy2)}
@@ -111,7 +119,7 @@ var ROLE='cook',API='https://script.google.com/macros/s/AKfycbzOT0o3i03r2SCyWjT9
 var PIN='',D=null,FILTER=null,ACTOR='',CUR=null,BUSY=false;
 var DATE_FIELDS=['관련 날짜','변동 일자','시작일','필요한 날짜','조치일','처리일'];
 var LONG_FIELDS=['내용','조치 내용','재발 방지·식단 반영','메모','급식 메모','처리 내용','품목·내용','공지 내용'];
-var ICON={req:['!','#c00000','요청·클레임'],notice:['공','#44546a','공지·전달'],diet:['식','#3d7a2a','특별 식이 변경'],meal:['±','#2f5597','식수 변동'],buy:['구','#7a5a00','조리실 요청·구매']};
+var ICON={req:['!','#b5485d','요청·클레임'],notice:['공','#5b6b8c','공지·전달'],diet:['식','#3f8a5f','특별 식이 변경'],meal:['±','#2c7a99','식수 변동'],buy:['구','#a86f2c','조리실 요청·구매']};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);}catch(e){return '';}}
@@ -161,7 +169,7 @@ function summary(x){
   return {head:''};
 }
 function card(x,closed){
-  var s=summary(x),cls='card'+(!closed&&x.over?' over':(!closed&&s.urg?' urg':''));
+  var s=summary(x),cls='card t-'+x.tab+(!closed&&x.over?' over':(!closed&&s.urg?' urg':''));
   var h='<div class="'+cls+'" data-open="'+x.tab+':'+esc(x.no)+'"><div class="top"><span class="no">#'+esc(x.no)+'</span>';
   if(s.tag)h+='<span class="pill '+(s.tagc||'')+'">'+esc(s.tag)+'</span>';
   if(s.cat)h+='<span>'+esc(s.cat)+'</span>';
@@ -189,12 +197,20 @@ function inlineActions(x){
 }
 function row(x){
   var s=summary(x);
-  return '<div class="row" data-open="'+x.tab+':'+esc(x.no)+'"><div class="d">'+esc(String(x.at).split(' ')[0])+'</div><div class="m"><b>'+esc(s.head)+'</b>'+
+  return '<div class="row t-'+x.tab+'" data-open="'+x.tab+':'+esc(x.no)+'"><div class="d">'+esc(String(x.at).split(' ')[0])+(String(x.at).split(' ')[1]?'<small>'+esc(String(x.at).split(' ')[1])+'</small>':'')+'</div><div class="m"><b>'+esc(s.head)+'</b>'+
     (s.red?'<div class="red" style="font-size:13px">'+esc(s.red)+'</div>':'')+(s.body?'<div class="meta">'+esc(s.body)+'</div>':'')+
     (s.note?'<div class="meta">↳ '+esc(s.note)+'</div>':'')+'</div><div class="s">'+pill(x.status)+'</div></div>';
 }
 function btn(href,k,extra){var c=ICON[k];return '<a class="btn'+(extra||'')+'" href="'+esc(href)+'" target="_blank"><i style="background:'+c[1]+'">'+c[0]+'</i>'+c[2]+'</a>';}
-function hd(t,lab,n){return '<h2>'+esc(lab)+' <span class="n">'+n+'</span>'+(ROLE==='admin'?'<button class="addb" data-new="'+t+'">+ 새로 쓰기</button>':'')+'</h2>';}
+function hd(t,lab,n){var c=ICON[t]||['','#44546a'];return '<h2 class="sec" style="--tc:'+c[1]+'"><span class="ic">'+c[0]+'</span>'+esc(lab)+' <span class="n">'+n+'</span>'+(ROLE==='admin'?'<button class="addb" data-new="'+t+'">+ 새로 쓰기</button>':'')+'</h2>';}
+// 관리자: 자주 여는 폴더·파일 바로가기 (구글 시트 '바로가기' 탭에서 고침)
+function shortcuts(d){
+  var L=d.shortcuts||[];if(!L.length)return '';
+  var col={'폴더':['폴더','#5b6b8c'],'엑셀':['엑셀','#2e7d4f'],'파일':['파일','#6b7a90']};
+  return '<div class="links">'+L.map(function(x){var c=col[x.kind]||col['파일'];
+    var inner='<i style="background:'+c[1]+'">'+c[0]+'</i><span>'+esc(x.name)+'</span>';
+    return x.url?'<a class="lk" href="'+esc(x.url)+'" target="_blank" rel="noopener">'+inner+'</a>':'<span class="lk off" title="주소가 아직 없습니다">'+inner+'</span>';}).join('')+'</div>';
+}
 function list(items,fn,emptyMsg){items=items.filter(match);return items.length?items.map(fn).join(''):'<div class="empty">'+(emptyMsg||'없음')+'</div>';}
 
 function render(d){
@@ -202,7 +218,7 @@ function render(d){
   var h='';
   if(ROLE==='admin'){
     h+='<div class="tools"><select id="actor"><option value="">처리자 선택</option>'+d.actors.map(function(a){return '<option'+(a===ACTOR?' selected':'')+'>'+esc(a)+'</option>';}).join('')+'</select>'+
-      '<a class="tbtn" href="'+esc(d.sheetUrl)+'" target="_blank">구글 시트 열기</a><button class="tbtn" id="trashBtn">삭제함 ('+d.trash.length+')</button></div>';
+      '<a class="tbtn" href="'+esc(d.sheetUrl)+'" target="_blank">구글 시트 열기</a><button class="tbtn" id="trashBtn">삭제함 ('+d.trash.length+')</button></div>'+shortcuts(d);
   } else {
     h+='<div class="btns">';
     d.tabs.forEach(function(k){
